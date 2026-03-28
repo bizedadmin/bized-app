@@ -7,6 +7,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-[#0B141A]">
@@ -25,6 +27,12 @@ export default function SignupPage() {
               Start growing your business on WhatsApp today.
             </p>
           </div>
+
+          {error && (
+            <div className="mt-4 p-4 text-sm text-red-600 bg-red-50 dark:bg-red-900/10 dark:text-red-400 rounded-xl text-center">
+              {error}
+            </div>
+          )}
 
           <div className="mt-8">
             <button
@@ -112,13 +120,34 @@ export default function SignupPage() {
               </div>
 
               <button
-                onClick={() => {
-                  // Connect to your actual backend registration endpoint later
-                  signIn("credentials", { email, password, callbackUrl: "/dashboard" })
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true);
+                  setError("");
+                  
+                  try {
+                    const res = await fetch("/api/auth/register", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name, email, password }),
+                    });
+                    
+                    if (res.ok) {
+                      // Once registered, sign them in 
+                      await signIn("credentials", { email, password, callbackUrl: "/dashboard" })
+                    } else {
+                      const data = await res.json();
+                      setError(data.message || "An error occurred during registration");
+                    }
+                  } catch (err) {
+                    setError("Failed to reach the server");
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
-                className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-green-500/20 text-lg font-bold text-white bg-[#25D366] hover:bg-[#1fba58] focus:outline-none transition-all hover:-translate-y-px"
+                className={`w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-green-500/20 text-lg font-bold text-white transition-all ${loading ? 'bg-[#25D366]/60 cursor-not-allowed' : 'bg-[#25D366] hover:bg-[#1fba58] hover:-translate-y-px focus:outline-none'}`}
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </button>
 
               <p className="text-center text-sm text-gray-500 mt-6">

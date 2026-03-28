@@ -4,6 +4,8 @@ import Google from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials"
 import clientPromise from "./lib/mongodb"
 
+import bcrypt from "bcryptjs"
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
   session: { strategy: "jwt" },
@@ -21,11 +23,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Simple manual auth bypass for dev, will wire exact DB checks later
-        if (credentials?.email === "admin@bized.app" && credentials?.password === "password") {
-          return { id: "1", name: "Admin User", email: "admin@bized.app" }
-        }
-        return null
+        if (!credentials?.email || !credentials?.password) return null;
+        
+        const client = await clientPromise;
+        const db = client.db(process.env.MONGODB_DB || "bizedapp");
+        const user = await db.collection("users").findOne({ email: credentials.email });
+        
+        if (!user || !user.password) return null;
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password as string,
+          user.password
+        );
+
+        if (!isPasswordValid) return null;
+
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+        };
       }
     })
   ],
