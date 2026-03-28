@@ -1,25 +1,52 @@
 "use client"
-import { View, Text, TouchableOpacity, TextInput } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform } from 'react-native'
 import { useState } from 'react'
-import { useNavigation } from '@react-navigation/native'
+import { useRouter } from 'solito/navigation'
+import { apiFetch } from '../../utils/api'
 
-export function LoginScreen({ onSignInWithGoogle, onSignInWithEmail }: {
-  onSignInWithGoogle?: () => void
-  onSignInWithEmail?: (e: string, p: string) => void
-}) {
+export function LoginScreen() {
+  const [isLogin, setIsLogin] = useState(true)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const navigation = useNavigation<any>()
+  const [loading, setLoading] = useState(false)
+  
+  const router = useRouter()
 
-  const handleEmailSignIn = () => {
-    if (onSignInWithEmail) onSignInWithEmail(email, password)
-    else navigation.replace("Main")
-  }
+  const handleAuth = async () => {
+    if (!email || !password || (!isLogin && !name)) {
+      const msg = "Please fill in all fields"
+      Platform.OS === 'web' ? alert(msg) : Alert.alert("Error", msg)
+      return
+    }
 
-  const handleGoogleSignIn = () => {
-    if (onSignInWithGoogle) onSignInWithGoogle()
-    else navigation.replace("Main")
+    setLoading(true)
+    try {
+      if (isLogin) {
+        // Sign In
+        const data = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        })
+        console.log("Logged in:", data)
+        router.replace("/locations")
+      } else {
+        // Sign Up
+        const data = await apiFetch('/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, password })
+        })
+        const msg = "Account created! You can now sign in."
+        Platform.OS === 'web' ? alert(msg) : Alert.alert("Success", msg)
+        setIsLogin(true)
+      }
+    } catch (err: any) {
+      const msg = err.message || "An error occurred"
+      Platform.OS === 'web' ? alert(msg) : Alert.alert("Error", msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -29,28 +56,26 @@ export function LoginScreen({ onSignInWithGoogle, onSignInWithEmail }: {
           <Text className="text-white font-black text-2xl">b</Text>
         </View>
         <Text className="text-3xl font-black text-gray-900 dark:text-white text-center">
-          Welcome back
+          {isLogin ? "Welcome back" : "Create Account"}
         </Text>
         <Text className="text-gray-500 mt-2 text-center text-base">
-          Log in to manage your business
+          {isLogin ? "Log in to manage your business" : "Start your journey with Bized"}
         </Text>
       </View>
 
       <View className="space-y-4 max-w-sm mx-auto w-full">
-        <TouchableOpacity 
-          onPress={handleGoogleSignIn}
-          className="w-full flex-row items-center justify-center gap-3 bg-white dark:bg-[#111B21] border border-gray-200 dark:border-white/10 py-4 rounded-2xl shadow-sm"
-        >
-          {/* Simple flat G icon */}
-          <Text className="font-black text-lg text-blue-500">G</Text>
-          <Text className="font-bold text-gray-700 dark:text-gray-300">Continue with Google</Text>
-        </TouchableOpacity>
-
-        <View className="flex-row items-center my-4 opacity-30">
-          <View className="flex-1 h-px bg-gray-400" />
-          <Text className="px-4 text-gray-500 font-bold uppercase tracking-widest text-xs">Or email</Text>
-          <View className="flex-1 h-px bg-gray-400" />
-        </View>
+        {!isLogin && (
+          <View className="mb-4">
+            <Text className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Full Name</Text>
+            <TextInput 
+              value={name}
+              onChangeText={setName}
+              placeholder="Jane Doe"
+              placeholderTextColor="#9ca3af"
+              className="w-full bg-gray-50 dark:bg-[#111B21] border border-gray-100 dark:border-white/10 px-5 py-4 rounded-2xl text-gray-900 dark:text-white"
+            />
+          </View>
+        )}
 
         <View className="mb-4">
           <Text className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Email</Text>
@@ -86,16 +111,22 @@ export function LoginScreen({ onSignInWithGoogle, onSignInWithEmail }: {
         </View>
 
         <TouchableOpacity 
-          onPress={handleEmailSignIn}
-          className="w-full bg-[#25D366] text-white py-4 rounded-2xl items-center shadow-lg shadow-green-500/20"
+          onPress={handleAuth}
+          disabled={loading}
+          className={`w-full ${loading ? 'opacity-70' : ''} bg-[#25D366] text-white py-4 rounded-2xl items-center shadow-lg shadow-green-500/20`}
         >
-          <Text className="text-white font-bold text-lg">Sign In</Text>
+          {loading ? <ActivityIndicator color="white" /> : (
+            <Text className="text-white font-bold text-lg">{isLogin ? "Sign In" : "Sign Up"}</Text>
+          )}
         </TouchableOpacity>
 
         <View className="items-center mt-6">
-          <Text className="text-gray-500 text-sm">
-            Don't have an account? <Text className="text-[#25D366] font-bold">Sign up free</Text>
-          </Text>
+          <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+            <Text className="text-gray-500 text-sm text-center">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+              <Text className="text-[#25D366] font-bold">{isLogin ? "Sign up free" : "Log in"}</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

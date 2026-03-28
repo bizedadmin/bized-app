@@ -9,8 +9,11 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@repo/app",
     "@repo/ui",
+    "solito",
+    "moti",
     "nativewind",
     "react-native-reanimated",
+    "react-native-web",
   ],
   typescript: {
     ignoreBuildErrors: true,

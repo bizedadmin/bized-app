@@ -10,6 +10,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        blue: {
+          1000: '#2a8af6',
+        },
+        purple: {
+          1000: '#a853ba',
+        },
+        red: {
+          1000: '#e92a67',
+        },
         whatsapp: {
           primary: '#25D366',
           dark: '#075E54',

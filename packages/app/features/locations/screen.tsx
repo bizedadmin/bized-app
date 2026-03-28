@@ -1,13 +1,16 @@
 "use client"
-import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native'
-import { Plus, MapPin, Store, ArrowRight, Settings, Users, LogOut, Smartphone } from 'lucide-react-native'
-import { useRouter } from 'solito/router'
+import { View, Text, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Alert, TextInput } from 'react-native'
+import { Plus, MapPin, Store, ArrowRight, Settings, Users, LogOut, Smartphone, X } from 'lucide-react-native'
+import { useRouter } from 'solito/navigation'
 import { styled } from 'nativewind'
+import { useState, useEffect } from 'react'
+import { apiFetch } from '../../utils/api'
 
 // Force standard RN components to behave with Tailwind classes on Web
 const StyledView = styled(View)
 const StyledText = styled(Text)
 const StyledTouchableOpacity = styled(TouchableOpacity)
+const StyledTextInput = styled(TextInput)
 
 type BusinessLocation = { 
   id: string, 
@@ -19,16 +22,61 @@ type BusinessLocation = {
   staff: number
 }
 
-const mockupLocations: BusinessLocation[] = [
-  { id: '1', name: 'Downtown Main Store', status: 'Online', whatsapp: 'Connected', initials: 'DS', color: 'bg-green-500', staff: 5 },
-  { id: '2', name: 'Airport Pickup Point', status: 'Online', whatsapp: 'Disconnected', initials: 'AP', color: 'bg-blue-500', staff: 2 },
-  { id: '3', name: 'Westside Logistics Hub', status: 'Offline', whatsapp: 'Connected', initials: 'WL', color: 'bg-orange-500', staff: 8 },
-]
-
 export function LocationsScreen() {
   const router = useRouter()
-  const hasLocations = mockupLocations.length > 0;
+  const [locations, setLocations] = useState<BusinessLocation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newLocationName, setNewLocationName] = useState('')
+  const [isAdding, setIsAdding] = useState(false)
+
   const orgName = "Bized Global Ltd";
+
+  const loadLocations = async () => {
+    try {
+      setLoading(true)
+      const data = await apiFetch('/api/locations')
+      setLocations(data)
+    } catch (err: any) {
+      setError(err.message || 'Failed to load locations')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadLocations()
+  }, [])
+
+  const handleAddLocation = async () => {
+    if (!newLocationName.trim()) return
+    
+    setIsAdding(true)
+    try {
+      await apiFetch('/api/locations', {
+        method: 'POST',
+        body: JSON.stringify({ name: newLocationName })
+      })
+      setNewLocationName('')
+      setShowAddModal(false)
+      loadLocations() // Refresh list
+    } catch (err: any) {
+      const msg = err.message || "Failed to add location"
+      Platform.OS === 'web' ? alert(msg) : Alert.alert("Error", msg)
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
+  if (loading && locations.length === 0) {
+    return (
+      <StyledView className="flex-1 bg-gray-50 dark:bg-[#0B141A] items-center justify-center">
+        <ActivityIndicator color="#25D366" size="large" />
+      </StyledView>
+    )
+  }
 
   return (
     <StyledView className="flex-1 bg-gray-50 dark:bg-[#0B141A]">
@@ -58,8 +106,35 @@ export function LocationsScreen() {
           </StyledText>
         </StyledView>
 
+        {/* Add Location Overlay/Form */}
+        {showAddModal && (
+          <StyledView className="bg-white dark:bg-[#111B21] rounded-[32px] p-8 mb-8 border-2 border-[#25D366]/30 shadow-2xl shadow-green-500/10">
+            <StyledView className="flex-row justify-between items-center mb-6">
+              <StyledText className="text-xl font-black text-gray-900 dark:text-white">New Location</StyledText>
+              <StyledTouchableOpacity onPress={() => setShowAddModal(false)}>
+                <X color="#9CA3AF" size={24} />
+              </StyledTouchableOpacity>
+            </StyledView>
+            <StyledTextInput 
+              autoFocus
+              value={newLocationName}
+              onChangeText={setNewLocationName}
+              placeholder="e.g. Downtown Branch"
+              placeholderTextColor="#9CA3AF"
+              className="bg-gray-50 dark:bg-[#0B141A] border border-gray-100 dark:border-white/5 p-5 rounded-2xl text-gray-900 dark:text-white text-lg font-bold mb-6"
+            />
+            <StyledTouchableOpacity 
+              onPress={handleAddLocation}
+              disabled={isAdding}
+              className={`bg-[#25D366] py-5 rounded-2xl items-center shadow-xl shadow-[#25D366]/20 ${isAdding ? 'opacity-50' : ''}`}
+            >
+              {isAdding ? <ActivityIndicator color="white" /> : <StyledText className="text-white font-black text-lg">Create Location</StyledText>}
+            </StyledTouchableOpacity>
+          </StyledView>
+        )}
+
         {/* Locations Grid / Empty State */}
-        {!hasLocations ? (
+        {locations.length === 0 ? (
           <StyledView className="bg-white dark:bg-[#111B21] rounded-[40px] p-12 shadow-sm border border-gray-100 dark:border-white/5 items-center mb-8">
             <StyledView className="w-28 h-28 bg-[#25D366]/10 rounded-full flex items-center justify-center mb-8">
               <Store color="#25D366" size={48} />
@@ -69,6 +144,7 @@ export function LocationsScreen() {
               You haven't added any businesses or delivery locations to your organization yet.
             </StyledText>
             <StyledTouchableOpacity 
+              onPress={() => setShowAddModal(true)}
               className="w-full max-w-sm bg-[#25D366] rounded-2xl flex-row items-center justify-center py-5 shadow-xl shadow-[#25D366]/30"
             >
               <Plus color="white" size={24} strokeWidth={3} className="mr-2" />
@@ -79,14 +155,17 @@ export function LocationsScreen() {
           <StyledView className="space-y-6">
             <StyledView className="flex-row items-center justify-between mb-4 px-2">
                <StyledText className="text-[10px] font-black uppercase tracking-[4px] text-gray-400">Manage Portfolio</StyledText>
-               <StyledTouchableOpacity className="flex-row items-center bg-white dark:bg-[#111B21] px-4 py-2 rounded-full border border-gray-100 dark:border-white/5">
+               <StyledTouchableOpacity 
+                onPress={() => setShowAddModal(true)}
+                className="flex-row items-center bg-white dark:bg-[#111B21] px-4 py-2 rounded-full border border-gray-100 dark:border-white/5"
+               >
                   <Plus color="#25D366" size={16} className="mr-2" />
                   <StyledText className="text-[#25D366] font-black text-[10px]">NEW LOCATION</StyledText>
                </StyledTouchableOpacity>
             </StyledView>
 
             <StyledView className={`${Platform.OS === 'web' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'flex-col gap-4'}`}>
-                {mockupLocations.map((loc) => (
+                {locations.map((loc) => (
                     <StyledTouchableOpacity
                         key={loc.id}
                         onPress={() => router.push('/dashboard')}

@@ -7,6 +7,7 @@ import { Provider } from "@repo/app/provider";
 // Screens
 import { LandingScreen }       from "@repo/app/features/landing/screen";
 import { LoginScreen }         from "@repo/app/features/auth/login-screen";
+import { LocationsScreen }     from "@repo/app/features/locations/screen";
 import { DashboardScreen }     from "@repo/app/features/dashboard/screen";
 import { CatalogScreen }       from "@repo/app/features/catalog/screen";
 import { OrderScreen }         from "@repo/app/features/order/screen";
@@ -69,6 +70,7 @@ export default function App() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="landing" component={LandingScreen} />
           <Stack.Screen name="login" component={LoginScreen} />
+          <Stack.Screen name="Locations" component={LocationsScreen} />
           <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen name="Business" component={BusinessScreen} options={{ presentation: "modal" }} />
         </Stack.Navigator>

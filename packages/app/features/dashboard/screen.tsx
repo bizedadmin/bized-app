@@ -1,6 +1,8 @@
 "use client"
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { TrendingUp, ShoppingBag, Users, Activity, ArrowUpRight, ArrowDownRight, Package } from 'lucide-react-native'
+import { useState, useEffect } from 'react'
+import { apiFetch } from '../../utils/api'
 
 interface DashboardScreenProps {
   stats?: {
@@ -16,8 +18,40 @@ interface DashboardScreenProps {
   onNavigate?: (route: string) => void
 }
 
-export function DashboardScreen({ stats, recentOrders = [], isLoading, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({ stats: initialStats, recentOrders: initialOrders, isLoading: initialLoading, onNavigate }: DashboardScreenProps) {
+  const [stats, setStats] = useState(initialStats)
+  const [recentOrders, setRecentOrders] = useState(initialOrders || [])
+  const [loading, setLoading] = useState(initialLoading ?? !initialStats)
+  const [error, setError] = useState<string | null>(null)
+
   const formatCurrency = (amount: number) => `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+
+  useEffect(() => {
+    // Only fetch if data wasn't passed in as props
+    if (!initialStats) {
+      async function loadDashboard() {
+        try {
+          setLoading(true)
+          const data = await apiFetch('/api/dashboard')
+          setStats(data.stats)
+          setRecentOrders(data.recentOrders || [])
+        } catch (err: any) {
+          setError(err.message || 'Failed to load dashboard')
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadDashboard()
+    }
+  }, [initialStats])
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-gray-50 dark:bg-[#0B141A] items-center justify-center">
+        <ActivityIndicator color="#25D366" size="large" />
+      </View>
+    )
+  }
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-[#0B141A]">
