@@ -1,115 +1,97 @@
 "use client"
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
-import { Building2, Phone, Globe, Tag, Coins, Clock, ChevronRight, Edit3 } from 'lucide-react-native'
+import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native'
+import { Plus, Building2, ChevronRight, Store, ArrowRight, Settings } from 'lucide-react-native'
 
-const CATEGORIES = [
-  'Retail', 'Food & Beverage', 'Health & Beauty', 'Fashion', 'Electronics',
-  'Home & Garden', 'Education', 'Professional Services', 'Travel', 'Other'
+type Business = { id: string, name: string, role: string, initials: string, color: string }
+
+const mockupBusinesses: Business[] = [
+  // Uncomment below to test existing business UI
+  // { id: '1', name: 'Bized Retail Store', role: 'Owner', initials: 'BR', color: 'bg-[#25D366]' },
 ]
 
-interface BusinessScreenProps {
-  business?: {
-    id: string; name: string; description?: string; phone: string
-    whatsappAccountId?: string; category: string; currency: string
-    timezone: string; logoUrl?: string; plan: string
-  }
-  isLoading?: boolean
-  onEdit?: (field: string) => void
-  onUpgradePlan?: () => void
-}
-
-const planBadge: Record<string, { bg: string; text: string; label: string }> = {
-  free:       { bg: 'bg-gray-100',     text: 'text-gray-700',    label: 'Free' },
-  starter:    { bg: 'bg-blue-100',     text: 'text-blue-700',    label: 'Starter' },
-  growth:     { bg: 'bg-[#25D366]/15', text: 'text-[#075E54]',   label: 'Growth' },
-  enterprise: { bg: 'bg-purple-100',   text: 'text-purple-700',  label: 'Enterprise' },
-}
-
-export function BusinessScreen({ business, isLoading, onEdit, onUpgradePlan }: BusinessScreenProps) {
-  const plan = planBadge[business?.plan ?? 'free'] ?? planBadge.free
-  const initials = business?.name?.slice(0, 2).toUpperCase() ?? '??'
-
-  const fields = [
-    { icon: Building2, key: 'name',     label: 'Business Name',   value: business?.name },
-    { icon: Phone,     key: 'phone',    label: 'WhatsApp Number',  value: business?.phone },
-    { icon: Tag,       key: 'category', label: 'Category',         value: business?.category },
-    { icon: Coins,     key: 'currency', label: 'Currency',         value: business?.currency },
-    { icon: Globe,     key: 'timezone', label: 'Timezone',         value: business?.timezone },
-  ]
+export function BusinessScreen() {
+  const hasBusinesses = mockupBusinesses.length > 0;
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-[#0B141A]">
-      {/* Header */}
-      <View className="bg-white dark:bg-[#111B21] px-6 pt-12 pb-6 border-b border-gray-100 dark:border-gray-800">
-        <Text className="text-3xl font-black text-[#075E54] dark:text-white mb-6">Business</Text>
-
-        {/* Logo + Name */}
-        <View className="flex-row items-center gap-5">
-          <View className="w-20 h-20 bg-[#25D366] rounded-3xl items-center justify-center shadow-lg">
-            <Text className="text-white text-3xl font-black">{initials}</Text>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }} showsVerticalScrollIndicator={false}>
+        
+        {/* Header */}
+        <View className="mt-8 mb-10">
+          <View className="w-16 h-16 bg-[#25D366]/10 rounded-2xl flex items-center justify-center mb-6">
+            <Building2 color="#25D366" size={32} strokeWidth={2.5} />
           </View>
-          <View className="flex-1">
-            <Text className="text-xl font-black text-gray-900 dark:text-white">{business?.name ?? '—'}</Text>
-            {business?.description && (
-              <Text className="text-gray-500 text-sm mt-1" numberOfLines={2}>{business.description}</Text>
-            )}
-            <View className={`mt-2 self-start px-3 py-1 rounded-full ${plan.bg}`}>
-              <Text className={`text-xs font-black ${plan.text}`}>{plan.label} Plan</Text>
-            </View>
-          </View>
+          <Text className="text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-3">
+            Your Businesses
+          </Text>
+          <Text className="text-base font-medium text-gray-500 dark:text-gray-400">
+            Select an existing workspace or create a new one to manage your WhatsApp sales.
+          </Text>
         </View>
-      </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
-        {/* Business Details */}
-        <Text className="text-gray-400 text-xs font-bold uppercase tracking-widest px-2 mb-3 mt-2">Details</Text>
-        {fields.map((field) => (
-          <TouchableOpacity
-            key={field.key}
-            onPress={() => onEdit?.(field.key)}
-            className="bg-white dark:bg-[#111B21] rounded-3xl px-5 py-4 mb-3 shadow-sm flex-row items-center"
-          >
-            <View className="w-10 h-10 bg-[#25D366]/10 rounded-xl items-center justify-center mr-4">
-              <field.icon color="#25D366" size={18} />
+        {/* Create New Business CTA - Prominent if no businesses, secondary if businesses exist */}
+        {!hasBusinesses && (
+          <View className="bg-white dark:bg-[#111B21] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-white/5 items-center mb-8">
+            <View className="w-24 h-24 bg-gray-50 dark:bg-[#0B141A] rounded-full flex items-center justify-center mb-6 border-4 border-white dark:border-[#111B21] shadow-sm">
+              <Store color="#9CA3AF" size={40} />
             </View>
-            <View className="flex-1">
-              <Text className="text-gray-400 text-xs mb-0.5">{field.label}</Text>
-              <Text className="font-bold text-gray-900 dark:text-white">{field.value ?? '—'}</Text>
-            </View>
-            <Edit3 color="#9CA3AF" size={16} />
-          </TouchableOpacity>
-        ))}
-
-        {/* WhatsApp Connection */}
-        <Text className="text-gray-400 text-xs font-bold uppercase tracking-widest px-2 mb-3 mt-4">WhatsApp</Text>
-        <View className="bg-white dark:bg-[#111B21] rounded-3xl px-5 py-4 mb-3 shadow-sm flex-row items-center">
-          <View className="w-10 h-10 bg-[#25D366]/10 rounded-xl items-center justify-center mr-4">
-            <Phone color="#25D366" size={18} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-400 text-xs mb-0.5">Cloud API Account</Text>
-            <Text className="font-bold text-gray-900 dark:text-white">
-              {business?.whatsappAccountId ? `Connected (${business.whatsappAccountId})` : 'Not Connected'}
+            <Text className="text-xl font-black text-gray-900 dark:text-white text-center mb-2">No Businesses Yet</Text>
+            <Text className="text-gray-500 dark:text-gray-400 text-center mb-8 max-w-xs">
+              Create your first business workspace to start generating revenue through WhatsApp.
             </Text>
+            <TouchableOpacity 
+              className="w-full bg-[#25D366] rounded-2xl flex-row items-center justify-center py-4 px-6 shadow-lg shadow-[#25D366]/20 transition-all hover:bg-[#20bd5a] hover:-translate-y-1"
+              style={Platform.OS === 'web' ? { cursor: 'pointer' } : {}}
+            >
+              <Plus color="white" size={24} strokeWidth={3} className="mr-2" />
+              <Text className="text-white font-bold text-lg">Create New Business</Text>
+            </TouchableOpacity>
           </View>
-          <View className={`w-3 h-3 rounded-full ${business?.whatsappAccountId ? 'bg-[#25D366]' : 'bg-gray-300'}`} />
-        </View>
-
-        {/* Upgrade CTA */}
-        {business?.plan === 'free' && (
-          <TouchableOpacity
-            onPress={onUpgradePlan}
-            className="bg-[#075E54] rounded-3xl p-6 mt-4 flex-row items-center justify-between"
-          >
-            <View>
-              <Text className="text-white font-black text-xl">Upgrade Plan</Text>
-              <Text className="text-white/70 text-sm mt-1">Unlock advanced features & higher limits</Text>
-            </View>
-            <ChevronRight color="white" size={24} />
-          </TouchableOpacity>
         )}
 
-        <View className="h-8" />
+        {/* List of Existing Businesses */}
+        {hasBusinesses && (
+          <View className="space-y-4 mb-8">
+            {mockupBusinesses.map((biz) => (
+              <TouchableOpacity
+                key={biz.id}
+                className="bg-white dark:bg-[#111B21] rounded-[24px] p-5 flex-row items-center border border-gray-100 dark:border-white/5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] transition-all hover:border-[#25D366]/50 hover:shadow-md hover:-translate-y-1"
+                style={Platform.OS === 'web' ? { cursor: 'pointer' } : {}}
+              >
+                <View className={`w-14 h-14 ${biz.color} rounded-2xl flex items-center justify-center mr-5 shadow-sm`}>
+                  <Text className="text-white font-black text-xl">{biz.initials}</Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xl font-black text-gray-900 dark:text-white mb-1">{biz.name}</Text>
+                  <View className="flex-row items-center">
+                    <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest">{biz.role}</Text>
+                  </View>
+                </View>
+                <View className="w-10 h-10 bg-gray-50 dark:bg-[#0B141A] rounded-full flex items-center justify-center">
+                  <ArrowRight color="#25D366" size={20} />
+                </View>
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity 
+              className="bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700/50 rounded-[24px] p-6 flex-row items-center justify-center mt-4 transition-all hover:border-[#25D366] hover:bg-gray-50 dark:hover:bg-white/5"
+              style={Platform.OS === 'web' ? { cursor: 'pointer' } : {}}
+            >
+              <Plus color="#9CA3AF" size={24} className="mr-3" />
+              <Text className="text-gray-500 dark:text-gray-400 font-bold text-lg">Add Another Business</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Quick Settings / Profile (Optional bottom elements) */}
+        <TouchableOpacity 
+          className="flex-row items-center py-4 self-center mt-auto opacity-60 transition-all hover:opacity-100"
+          style={Platform.OS === 'web' ? { cursor: 'pointer' } : {}}
+        >
+          <Settings color="#6B7280" size={18} className="mr-2" />
+          <Text className="text-gray-500 dark:text-gray-400 font-bold text-sm">Account Settings</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </View>
   )

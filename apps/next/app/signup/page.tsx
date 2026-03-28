@@ -36,7 +36,7 @@ export default function SignupPage() {
 
           <div className="mt-8">
             <button
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("google", { callbackUrl: "/business" })}
               className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm bg-white dark:bg-[#111B21] text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
             >
               <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function SignupPage() {
                     
                     if (res.ok) {
                       // Once registered, sign them in 
-                      await signIn("credentials", { email, password, callbackUrl: "/dashboard" })
+                      await signIn("credentials", { email, password, callbackUrl: "/business" })
                     } else {
                       const data = await res.json();
                       setError(data.message || "An error occurred during registration");
