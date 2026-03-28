@@ -31,8 +31,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         
         if (!user || !user.password) return null;
 
+        const pepper = process.env.ENCRYPTION_KEY || "";
         const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
+          (credentials.password as string) + pepper,
           user.password
         );
 

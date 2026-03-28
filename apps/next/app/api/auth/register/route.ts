@@ -26,8 +26,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash the password with a global pepper
+    const pepper = process.env.ENCRYPTION_KEY || "";
+    const hashedPassword = await bcrypt.hash(password + pepper, 10);
 
     // Insert new user
     const result = await usersCollection.insertOne({
