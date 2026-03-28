@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import path from "path";
 import { fileURLToPath } from "url";
+import { withNativeWind } from "nativewind/next-js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8,6 +9,9 @@ const __dirname = path.dirname(__filename);
 const nextConfig: NextConfig = {
   transpilePackages: [
     "@repo/app",
+    "@repo/ui",
+    "nativewind",
+    "react-native-reanimated",
   ],
   typescript: {
     ignoreBuildErrors: true,
@@ -20,7 +24,6 @@ const nextConfig: NextConfig = {
       ...(config.resolve.alias || {}),
       'react-native$': 'react-native-web',
       'react-native-svg': 'react-native-svg-web',
-      '@swc/helpers/_': path.resolve(__dirname, '../../node_modules/@swc/helpers/esm'),
     }
     config.resolve.extensions = [
       '.web.js',
@@ -37,4 +40,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNativeWind(nextConfig);
+
