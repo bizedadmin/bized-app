@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
  */
 const BASE_URL = Platform.OS === 'web' 
   ? '' 
-  : (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3002') 
+  : (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000') 
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
