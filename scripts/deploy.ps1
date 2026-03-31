@@ -41,10 +41,11 @@ git push origin main
 Write-Host "`n--- Executing Remote Update on Linode ($REMOTE_IP) ---" -ForegroundColor Cyan
 $remoteCommands = "
 cd $REMOTE_PATH && \
-git pull origin main && \
+git fetch origin main && \
+git reset --hard origin/main && \
 npm install && \
 npx turbo run build && \
-pm2 restart all || npm run start
+pm2 restart all || npx turbo run start
 "
 
 ssh -i $LOCAL_SSH_KEY_PATH -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_IP" $remoteCommands
