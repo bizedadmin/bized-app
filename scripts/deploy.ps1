@@ -6,7 +6,7 @@
 # --- CONFIGURATION (Adjust if necessary) ---
 $REMOTE_IP = "172.104.167.218"
 $REMOTE_USER = "root"
-$REMOTE_PATH = "/root/bized-app"
+$REMOTE_PATH = "/var/www/bized"
 $LOCAL_SSH_KEY_PATH = "$HOME\.ssh\bized_linode_key"
 
 # --- STEP 1: LOAD CREDENTIALS ---
